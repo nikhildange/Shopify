@@ -11,9 +11,13 @@
 		3113A827249D2E5D004474B2 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3113A826249D2E5D004474B2 /* SceneDelegate.swift */; };
 		3113A829249D2E5D004474B2 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3113A828249D2E5D004474B2 /* ViewController.swift */; };
 		3113A82C249D2E5D004474B2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3113A82A249D2E5D004474B2 /* Main.storyboard */; };
-		3113A82F249D2E5D004474B2 /* Shopify.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 3113A82D249D2E5D004474B2 /* Shopify.xcdatamodeld */; };
 		3113A831249D2E62004474B2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3113A830249D2E62004474B2 /* Assets.xcassets */; };
 		3113A834249D2E62004474B2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3113A832249D2E62004474B2 /* LaunchScreen.storyboard */; };
+		31A1C209249DAE7E00E4314F /* CoreDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A1C208249DAE7E00E4314F /* CoreDataManager.swift */; };
+		31A1C20D249DAEF300E4314F /* DataBaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A1C20C249DAEF300E4314F /* DataBaseManager.swift */; };
+		31A1C211249DAF6900E4314F /* APIResponseModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A1C210249DAF6900E4314F /* APIResponseModel.swift */; };
+		31A1C213249DAFE400E4314F /* NetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A1C212249DAFE400E4314F /* NetworkManager.swift */; };
+		31A1C225249DB3E100E4314F /* DBModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 31A1C223249DB3E100E4314F /* DBModel.xcdatamodeld */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,10 +26,14 @@
 		3113A826249D2E5D004474B2 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		3113A828249D2E5D004474B2 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		3113A82B249D2E5D004474B2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		3113A82E249D2E5D004474B2 /* Shopify.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Shopify.xcdatamodel; sourceTree = "<group>"; };
 		3113A830249D2E62004474B2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3113A833249D2E62004474B2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		3113A835249D2E62004474B2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		31A1C208249DAE7E00E4314F /* CoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManager.swift; sourceTree = "<group>"; };
+		31A1C20C249DAEF300E4314F /* DataBaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataBaseManager.swift; sourceTree = "<group>"; };
+		31A1C210249DAF6900E4314F /* APIResponseModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIResponseModel.swift; sourceTree = "<group>"; };
+		31A1C212249DAFE400E4314F /* NetworkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkManager.swift; sourceTree = "<group>"; };
+		31A1C224249DB3E100E4314F /* DBModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = DBModel.xcdatamodel; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +66,8 @@
 		3113A823249D2E5D004474B2 /* Shopify */ = {
 			isa = PBXGroup;
 			children = (
+				31A1C227249DB43600E4314F /* NW */,
+				31A1C226249DB41B00E4314F /* DB */,
 				3113A824249D2E5D004474B2 /* AppDelegate.swift */,
 				3113A826249D2E5D004474B2 /* SceneDelegate.swift */,
 				3113A828249D2E5D004474B2 /* ViewController.swift */,
@@ -65,9 +75,27 @@
 				3113A830249D2E62004474B2 /* Assets.xcassets */,
 				3113A832249D2E62004474B2 /* LaunchScreen.storyboard */,
 				3113A835249D2E62004474B2 /* Info.plist */,
-				3113A82D249D2E5D004474B2 /* Shopify.xcdatamodeld */,
 			);
 			path = Shopify;
+			sourceTree = "<group>";
+		};
+		31A1C226249DB41B00E4314F /* DB */ = {
+			isa = PBXGroup;
+			children = (
+				31A1C223249DB3E100E4314F /* DBModel.xcdatamodeld */,
+				31A1C208249DAE7E00E4314F /* CoreDataManager.swift */,
+				31A1C20C249DAEF300E4314F /* DataBaseManager.swift */,
+			);
+			name = DB;
+			sourceTree = "<group>";
+		};
+		31A1C227249DB43600E4314F /* NW */ = {
+			isa = PBXGroup;
+			children = (
+				31A1C210249DAF6900E4314F /* APIResponseModel.swift */,
+				31A1C212249DAFE400E4314F /* NetworkManager.swift */,
+			);
+			name = NW;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -141,10 +169,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				31A1C213249DAFE400E4314F /* NetworkManager.swift in Sources */,
 				3113A829249D2E5D004474B2 /* ViewController.swift in Sources */,
 				3113A825249D2E5D004474B2 /* AppDelegate.swift in Sources */,
-				3113A82F249D2E5D004474B2 /* Shopify.xcdatamodeld in Sources */,
+				31A1C225249DB3E100E4314F /* DBModel.xcdatamodeld in Sources */,
+				31A1C211249DAF6900E4314F /* APIResponseModel.swift in Sources */,
+				31A1C209249DAE7E00E4314F /* CoreDataManager.swift in Sources */,
 				3113A827249D2E5D004474B2 /* SceneDelegate.swift in Sources */,
+				31A1C20D249DAEF300E4314F /* DataBaseManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -342,13 +374,13 @@
 /* End XCConfigurationList section */
 
 /* Begin XCVersionGroup section */
-		3113A82D249D2E5D004474B2 /* Shopify.xcdatamodeld */ = {
+		31A1C223249DB3E100E4314F /* DBModel.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
-				3113A82E249D2E5D004474B2 /* Shopify.xcdatamodel */,
+				31A1C224249DB3E100E4314F /* DBModel.xcdatamodel */,
 			);
-			currentVersion = 3113A82E249D2E5D004474B2 /* Shopify.xcdatamodel */;
-			path = Shopify.xcdatamodeld;
+			currentVersion = 31A1C224249DB3E100E4314F /* DBModel.xcdatamodel */;
+			path = DBModel.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
 		};
