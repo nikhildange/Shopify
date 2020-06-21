@@ -32,18 +32,13 @@ static func responseHandler(data: Data?, response: URLResponse?, error: Error?) 
         DatabaseManager.storeJSONToDB(data: productsData)
         print("Documents Directory: ", FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).last ?? "Not Found!")
     
-        
-        let cat1 = DatabaseManager.getCategory(Id: 1)
-        print(cat1!.name)
-        let cat2 = DatabaseManager.getCategory(Id: 2)
-        print(cat2!.name!)
-        print(DatabaseManager.getProduct(Id:14)!.category!.name as Any)
-        
-        let prd = DatabaseManager.getAllProduct(ofCategory: nil, ofRankType: nil, sortBy: .order)
-        for i in prd {
-            print("\(String(describing: i.id)) Product: \(String(describing: i.name)) \t\t viewCount:\(i.rankInfo!.viewCount) \t\t shares:\(i.rankInfo!.shares) \t\t orderCount:\(i.rankInfo!.orderCount)")
-        }
-        
+//
+//        let cat1 = DatabaseManager.getCategory(Id: 1)
+//        print(cat1!.name)
+//        let cat2 = DatabaseManager.getCategory(Id: 2)
+//        print(cat2!.name!)
+//        print(DatabaseManager.getProduct(Id:14)!.category!.name as Any)
+//
     } catch (let error) {
         print("NW: Parsing Error: \(error.localizedDescription)")
     }

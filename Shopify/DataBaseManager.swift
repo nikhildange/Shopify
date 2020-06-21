@@ -61,17 +61,18 @@ struct DatabaseManager {
         coreDataManager.saveChanges()
     }
     
-    func getAllCategory() {
-        
+    static func getAllCategory() -> [Category] {
+        let request = NSFetchRequest<Category>(entityName: "Category")
+        do {
+            let categories = try DatabaseManager.coreDataManager.mainManagedObjectContext.fetch(request)
+            return categories
+        } catch {
+            print("Unable to fetch managed objects for entity categories.")
+        }
+        return []
     }
     
-    enum RankType {
-        case order
-        case share
-        case views
-    }
-    
-    static func getAllProduct(ofCategory: Int? = nil, ofRankType: RankType? = nil, sortBy: RankType? = RankType.order) -> [Product] {
+    static func getAllProduct(ofCategory: Int? = nil, sortBy: RankType? = RankType.order) -> [Product] {
         
         var sortKeyString: String = "rankInfo.orderCount"
         if let sortBy = sortBy {
@@ -97,6 +98,7 @@ struct DatabaseManager {
         
         return []
     }
+    
     
 //    func getVariantsOfProduct(id: Int) -> [Variant] {
 //
