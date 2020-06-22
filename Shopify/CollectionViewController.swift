@@ -14,6 +14,10 @@ class CollectionViewController: UICollectionViewController {
     
     var categoryDataSource = [Category]()
     var productDataSource = [Product]()
+    var productRankViewType: RankType = .order
+    
+    private let cellId = "cellId"
+    
     
     init() {
         super.init(collectionViewLayout: CollectionViewController.createLayout())
@@ -23,13 +27,33 @@ class CollectionViewController: UICollectionViewController {
         super.init(coder: coder)
     }
     
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        collectionView.collectionViewLayout = CollectionViewController.createLayout()
+        collectionView.backgroundColor = .white
+        navigationItem.title = "Shopify"
+        
+        let categoryXib = UINib(nibName: CategoryCollectionViewCell.nibName, bundle: nil)
+        collectionView.register(categoryXib, forCellWithReuseIdentifier: CategoryCollectionViewCell.reuseIdentifier)
+        let productXib = UINib(nibName: ProductCollectionViewCell.nibName, bundle: nil)
+        collectionView.register(productXib, forCellWithReuseIdentifier: ProductCollectionViewCell.reuseIdentifier)
+        
+        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: cellId)
+        collectionView.register(CategoryHeader.self, forSupplementaryViewOfKind: CategoryHeader.categoryHeader, withReuseIdentifier: CategoryHeader.categoryHeaderID)
+        collectionView.register(RankSegmentView.self, forSupplementaryViewOfKind: RankSegmentView.rankSegmentView, withReuseIdentifier: RankSegmentView.rankSegmentViewID)
+        
+        categoryDataSource = DatabaseManager.getAllCategory()
+        productDataSource = DatabaseManager.getAllProduct()
+        
+        collectionView.reloadData()
+    }
     
     static func createLayout() -> UICollectionViewCompositionalLayout {
         return UICollectionViewCompositionalLayout { (sectionNumber, env) -> NSCollectionLayoutSection? in
             
             if sectionNumber == 0 {
                 let insetValue: CGFloat = 8
-                let itemWidth: NSCollectionLayoutDimension = .fractionalWidth(1.0)
+                let itemWidth: NSCollectionLayoutDimension = .fractionalWidth(0.9)
                 let itemHeight: NSCollectionLayoutDimension = .absolute(90)
                     
                 let item1 = NSCollectionLayoutItem(layoutSize: .init(widthDimension: itemWidth, heightDimension: itemHeight))
@@ -40,12 +64,12 @@ class CollectionViewController: UICollectionViewController {
                 item2.contentInsets.bottom = insetValue
                 item2.contentInsets.trailing = insetValue
                 
-                let group1 = NSCollectionLayoutGroup.vertical(layoutSize: .init(widthDimension: .fractionalWidth(0.5), heightDimension: .estimated(500)), subitems: [item1, item2])
+                let group1 = NSCollectionLayoutGroup.vertical(layoutSize: .init(widthDimension: .fractionalWidth(0.45), heightDimension: .estimated(500)), subitems: [item1, item2])
                 let section = NSCollectionLayoutSection(group: group1)
-                section.contentInsets = .init(top: 32, leading: 8, bottom: 32, trailing: 16)
+                section.contentInsets = .init(top: 16, leading: 8, bottom: 32, trailing: 16)
                 section.orthogonalScrollingBehavior = .groupPaging
                 section.boundarySupplementaryItems = [
-                                .init(layoutSize: .init(widthDimension: .fractionalWidth(0.9), heightDimension: .estimated(50)), elementKind: categoryHeaderId, alignment: .top)
+                    .init(layoutSize: .init(widthDimension: .fractionalWidth(0.9), heightDimension: .estimated(50)), elementKind: CategoryHeader.categoryHeader, alignment: .top)
                              ]
                 return section
             } else {
@@ -70,38 +94,15 @@ class CollectionViewController: UICollectionViewController {
                 section.contentInsets = .init(top: 16, leading: 8, bottom: 8, trailing: 8)
                 section.orthogonalScrollingBehavior = .groupPagingCentered
                 section.boundarySupplementaryItems = [
-                                .init(layoutSize: .init(widthDimension: .fractionalWidth(0.9), heightDimension: .estimated(70)), elementKind: rankTypeHeader, alignment: .top)
+                    .init(layoutSize: .init(widthDimension: .fractionalWidth(0.9), heightDimension: .estimated(70)), elementKind: RankSegmentView.rankSegmentView, alignment: .top)
                              ]
                 return section
-                            }
+                }
         }
     }
     
-    override func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
-        let section = indexPath.section
-        if section == 0 {
-            let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: headerId, for: indexPath)
-            return header
-        }
-        else {
-            let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: rankTypeHeaderId, for: indexPath) as! RankTypeHeader
-            header.delegate = self
-            return header
-        }
-    }
     
-    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let controller = UIViewController()
-        controller.view.backgroundColor = indexPath.section == 0 ? .yellow : .blue
-        navigationController?.pushViewController(controller, animated: true)
-    }
-    
-    let headerId = "headerId"
-    static let categoryHeaderId = "categoryHeaderId"
-    
-    let rankTypeHeaderId = "rankTypeHeaderId"
-    static let rankTypeHeader = "rankTypeHeader"
-    
+    // MARK: UICollectionViewDataSource
     
     override func numberOfSections(in collectionView: UICollectionView) -> Int {
         2
@@ -112,7 +113,7 @@ class CollectionViewController: UICollectionViewController {
             return categoryDataSource.count
         }
         else if section == 1 {
-            return productDataSource.count
+            return 6
         }
         return 8
     }
@@ -128,10 +129,24 @@ class CollectionViewController: UICollectionViewController {
             return cell
         }
         else if section == 1 {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ProductCollectionViewCell.reuseIdentifier, for: indexPath) as! ProductCollectionViewCell
-            cell.backgroundColor = .gray
-            cell.configure(viewModel: ProductCollectionViewCellViewModel(product: productDataSource[row]))
-            return cell
+            if row < 5 {
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ProductCollectionViewCell.reuseIdentifier, for: indexPath) as! ProductCollectionViewCell
+                cell.backgroundColor = .gray
+                cell.configure(viewModel: ProductCollectionViewCellViewModel(product: productDataSource[row]))
+                return cell
+            }
+            else {
+                let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath)
+                
+                let seeMoreButton = UIButton()
+                seeMoreButton.setTitle("See more..", for: .normal)
+                seeMoreButton.setTitleColor(UIColor.gray, for: .normal)
+                seeMoreButton.frame = cell.contentView.bounds
+                seeMoreButton.contentMode = .bottomRight
+                seeMoreButton.addTarget(self, action: #selector(seeMoreTapped(_:)), for: .touchUpInside)
+                cell.contentView.addSubview(seeMoreButton)
+                return cell
+            }
         }
         else {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath)
@@ -140,42 +155,72 @@ class CollectionViewController: UICollectionViewController {
         }
     }
     
-    private let cellId = "cellId"
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        collectionView.collectionViewLayout = CollectionViewController.createLayout()
-        collectionView.backgroundColor = .white
-        navigationItem.title = "Shopify"
-        
-        let categoryXib = UINib(nibName: CategoryCollectionViewCell.nibName, bundle: nil)
-        collectionView.register(categoryXib, forCellWithReuseIdentifier: CategoryCollectionViewCell.reuseIdentifier)
-        
-        let productXib = UINib(nibName: ProductCollectionViewCell.nibName, bundle: nil)
-        collectionView.register(productXib, forCellWithReuseIdentifier: ProductCollectionViewCell.reuseIdentifier)
-        
-        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: cellId)
-        collectionView.register(Header.self, forSupplementaryViewOfKind: CollectionViewController.categoryHeaderId, withReuseIdentifier: headerId)
-        
-        collectionView.register(RankTypeHeader.self, forSupplementaryViewOfKind: CollectionViewController.rankTypeHeader, withReuseIdentifier: rankTypeHeaderId)
-        
-        categoryDataSource = DatabaseManager.getAllCategory()
-        productDataSource = DatabaseManager.getAllProduct()
-        collectionView.reloadData()
+    override func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        let section = indexPath.section
+        if section == 0 {
+            let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: CategoryHeader.categoryHeaderID, for: indexPath)
+            return header
+        }
+        else {
+            let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: RankSegmentView.rankSegmentViewID, for: indexPath) as! RankSegmentView
+            header.selectedRankType = productRankViewType
+            header.delegate = self
+            return header
+        }
+    }
+    
+    
+    // MARK: UICollectionViewDelegate
+    
+    
+    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let section = indexPath.section
+        if section == 0 {
+            let vc = storyboard.instantiateViewController(withIdentifier: "CategoryCollectionViewControllerID") as! CategoryCollectionViewController
+            vc.categoryInfo = categoryDataSource[indexPath.row]
+            navigationController?.pushViewController(vc, animated: true)
+        }
+        else {
+            let vc = storyboard.instantiateViewController(withIdentifier: "ProductViewControllerID") as! ProductViewController
+            vc.productInfo = productDataSource[indexPath.row]
+            navigationController?.pushViewController(vc, animated: true)
+        }
+    }
+    
+    // MARK : Action
+    
+    @objc func seeMoreTapped(_ sender: UIButton) {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let vc = storyboard.instantiateViewController(withIdentifier: "CategoryCollectionViewControllerID") as! CategoryCollectionViewController
+        vc.categoryInfo = nil
+        vc.sortProductByRankType = productRankViewType
+        navigationController?.pushViewController(vc, animated: true)
     }
     
     
 }
 
-class Header: UICollectionReusableView {
+extension CollectionViewController: RankSegmentViewDelegate {
+    func didSelect(rankType: RankType) {
+        productDataSource = DatabaseManager.getAllProduct(sortBy: rankType)
+        productRankViewType = rankType
+        collectionView.reloadSections(IndexSet(integer: 1))
+    }
+}
+
+class CategoryHeader: UICollectionReusableView {
+    
+    static let categoryHeader = "categoryHeader"
+    static let categoryHeaderID = "categoryHeaderID"
+    
     let label = UILabel()
     override init(frame: CGRect) {
         super.init(frame: frame)
-        label.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
         label.font = label.font.withSize(20)
         label.textAlignment = .left
-        label.text = "Categories"
-        
+        label.text = "Categories:"
         addSubview(label)
     }
     
@@ -188,154 +233,3 @@ class Header: UICollectionReusableView {
         fatalError("init(coder:) has not been implemented")
     }
 }
-
-extension CollectionViewController: RankTypeHeaderDelegate {
-    func didSelect(rankType: RankType) {
-        productDataSource = DatabaseManager.getAllProduct(sortBy: rankType)
-        collectionView.reloadSections(IndexSet(integer: 1))
-    }
-}
-
-protocol RankTypeHeaderDelegate {
-    func didSelect(rankType: RankType)
-}
-
-class RankTypeHeader: UICollectionReusableView {
-    var stackView   = UIStackView()
-    let segmentControl = UISegmentedControl()
-    let label = UILabel()
-    let selectedRank: RankType = .order
-    
-    var delegate: RankTypeHeaderDelegate!
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        label.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
-        label.text  = "See Product's:"
-        label.font = label.font.withSize(20)
-        label.textAlignment = .left
-        
-        segmentControl.insertSegment(withTitle: RankType.order.stringValue, at: 0, animated: true)
-        segmentControl.insertSegment(withTitle: RankType.share.stringValue, at: 1, animated: true)
-        segmentControl.insertSegment(withTitle: RankType.views.stringValue, at: 2, animated: true)
-        segmentControl.addTarget(self, action: #selector(segmentControl(_:)), for: .valueChanged)
-        segmentControl.selectedSegmentIndex = 0
-        segmentControl.apportionsSegmentWidthsByContent = true
-        
-        stackView.axis  = NSLayoutConstraint.Axis.vertical
-        stackView.distribution  = UIStackView.Distribution.fillProportionally
-        stackView.alignment = UIStackView.Alignment.leading
-        stackView.spacing   = 8.0
-        stackView.addArrangedSubview(label)
-        stackView.addArrangedSubview(segmentControl)
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        
-        addSubview(stackView)
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        stackView.frame = bounds
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    @objc func segmentControl(_ segmentedControl: UISegmentedControl) {
-       switch (segmentedControl.selectedSegmentIndex) {
-          case 0:
-            delegate?.didSelect(rankType: .order)
-          break
-          case 1:
-            delegate?.didSelect(rankType: .share)
-          break
-          case 2:
-            delegate?.didSelect(rankType: .views)
-          default:
-          break
-       }
-    }
-}
-
-
-
-
-
-//{
-//
-//    override func viewDidLoad() {
-//        super.viewDidLoad()
-//
-//        // Uncomment the following line to preserve selection between presentations
-//        // self.clearsSelectionOnViewWillAppear = false
-//
-//        // Register cell classes
-//        self.collectionView!.register(UICollectionViewCell.self, forCellWithReuseIdentifier: reuseIdentifier)
-//
-//        // Do any additional setup after loading the view.
-//    }
-//
-//    /*
-//    // MARK: - Navigation
-//
-//    // In a storyboard-based application, you will often want to do a little preparation before navigation
-//    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-//        // Get the new view controller using [segue destinationViewController].
-//        // Pass the selected object to the new view controller.
-//    }
-//    */
-//
-//    // MARK: UICollectionViewDataSource
-//
-//    override func numberOfSections(in collectionView: UICollectionView) -> Int {
-//        // #warning Incomplete implementation, return the number of sections
-//        return 1
-//    }
-//
-//
-//    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-//        // #warning Incomplete implementation, return the number of items
-//        return 8
-//    }
-//
-//    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-//        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath)
-//
-//        // Configure the cell
-//
-//        return cell
-//    }
-//
-//    // MARK: UICollectionViewDelegate
-//
-//    /*
-//    // Uncomment this method to specify if the specified item should be highlighted during tracking
-//    override func collectionView(_ collectionView: UICollectionView, shouldHighlightItemAt indexPath: IndexPath) -> Bool {
-//        return true
-//    }
-//    */
-//
-//    /*
-//    // Uncomment this method to specify if the specified item should be selected
-//    override func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
-//        return true
-//    }
-//    */
-//
-//    /*
-//    // Uncomment these methods to specify if an action menu should be displayed for the specified item, and react to actions performed on the item
-//    override func collectionView(_ collectionView: UICollectionView, shouldShowMenuForItemAt indexPath: IndexPath) -> Bool {
-//        return false
-//    }
-//
-//    override func collectionView(_ collectionView: UICollectionView, canPerformAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) -> Bool {
-//        return false
-//    }
-//
-//    override func collectionView(_ collectionView: UICollectionView, performAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) {
-//
-//    }
-//    */
-//
-//}

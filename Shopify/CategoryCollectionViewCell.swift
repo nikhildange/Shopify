@@ -39,7 +39,7 @@ class CategoryCollectionViewCell: UICollectionViewCell, ReusableCell {
         self.contentView.layer.shadowOpacity = 0.5
         self.contentView.layer.shadowRadius = 4
         self.contentView.layer.shadowOffset = CGSize(width: 0, height: 2)
-        self.contentView.layer.borderWidth = 2
+        self.contentView.layer.borderWidth = 1.5
     }
     
     @IBOutlet weak var titleLabel: UILabel! {

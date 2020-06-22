@@ -39,7 +39,7 @@ class ProductCollectionViewCell: UICollectionViewCell, ReusableCell {
     @IBOutlet weak var titleLabel: UILabel! {
         didSet {
             // Configure Title Label
-            titleLabel.numberOfLines = 2
+            titleLabel.numberOfLines = 3
         }
     }
     

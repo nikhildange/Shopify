@@ -87,6 +87,9 @@ struct DatabaseManager {
         }
         
         let request = NSFetchRequest<Product>(entityName: "Product")
+        if let categoryID = ofCategory {
+            request.predicate = NSPredicate(format: "category.id = %d", categoryID)
+        }
         request.sortDescriptors = [NSSortDescriptor(key: sortKeyString, ascending: false)]
         
         do {

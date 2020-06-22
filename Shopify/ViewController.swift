@@ -8,10 +8,9 @@
 
 import UIKit
 
-enum RankType {
-    case order
-    case share
-    case views
+enum RankType: Int {
+    case order = 0
+    case share, views
     
     var stringValue: String {
         switch(self) {
