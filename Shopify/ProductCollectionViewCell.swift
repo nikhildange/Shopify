@@ -11,7 +11,7 @@ import UIKit
 struct ProductCollectionViewCellViewModel {
     
     // MARK: - Properties
-    let product: Product
+    let product: ProductEntity
     
     var name: String {
         return product.name!

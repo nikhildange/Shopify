@@ -8,6 +8,24 @@
 
 import UIKit
 
+enum RankType: Int {
+    case order = 0
+    case share, views, all
+    
+    var stringValue: String {
+        switch(self) {
+        case .order:
+            return "Most Ordered"
+        case .share:
+            return "Most Shared"
+        case .views:
+            return "Most Viewed"
+        case .all:
+            return " All "
+        }
+    }
+}
+
 protocol RankSegmentViewDelegate {
     func didSelect(rankType: RankType)
 }
@@ -41,21 +59,24 @@ class RankSegmentView: UICollectionReusableView {
     
     func setup() {
         label.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
-        label.text  = "Product's:"
+        label.text  = "Trending:"
         label.font = label.font.withSize(20)
         label.textAlignment = .left
         
         segmentControl.insertSegment(withTitle: RankType.order.stringValue, at: 0, animated: true)
         segmentControl.insertSegment(withTitle: RankType.share.stringValue, at: 1, animated: true)
         segmentControl.insertSegment(withTitle: RankType.views.stringValue, at: 2, animated: true)
+        segmentControl.insertSegment(withTitle: RankType.all.stringValue, at: 3, animated: true)
         segmentControl.addTarget(self, action: #selector(segmentControl(_:)), for: .valueChanged)
         segmentControl.apportionsSegmentWidthsByContent = true
+//        segmentControl.selectedSegmentTintColor = UIColor.black
+//        segmentControl.backgroundColor = UIColor.white
         
         stackView.axis  = NSLayoutConstraint.Axis.vertical
-        stackView.layoutMargins = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
+        stackView.layoutMargins = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: 4)
         stackView.distribution  = UIStackView.Distribution.equalCentering
         stackView.alignment = UIStackView.Alignment.leading
-        stackView.spacing   = 8.0
+        stackView.spacing   = 16.0
 
         stackView.addArrangedSubview(label)
         stackView.addArrangedSubview(segmentControl)
@@ -79,8 +100,12 @@ class RankSegmentView: UICollectionReusableView {
           break
           case 2:
             delegate?.didSelect(rankType: .views)
-          default:
-          break
+            break
+       case 3:
+            delegate?.didSelect(rankType: .all)
+            break
+       default:
+        break
        }
     }
 }

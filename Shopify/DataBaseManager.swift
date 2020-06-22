@@ -2,124 +2,219 @@
 //  DataBaseManager.swift
 //  Shopify
 //
-//  Created by nikhil on 20/06/20.
+//  Created by nikhil on 22/06/20.
 //  Copyright © 2020 nikhil. All rights reserved.
 //
 
+import UIKit
 import CoreData
-import Foundation
 
-struct DatabaseManager {
-    
-    static let coreDataManager = CoreDataManager(modelName: "DBModel")
-    
-    static func getCategory(Id: Int) -> Category? {
-        let request = NSFetchRequest<Category>(entityName: "Category")
-        request.predicate = NSPredicate(format: "id = %d", Id)
-        do {
-            let category = try coreDataManager.mainManagedObjectContext.fetch(request)
-            return category.first
-        } catch {
-            print("Unable to fetch managed objects for entity Category.")
-        }
-        return nil
-    }
-    
-    
-    static func getProduct(Id: Int) -> Product? {
-        let request = NSFetchRequest<Product>(entityName: "Product")
-        request.predicate = NSPredicate(format: "id = %d", Id)
-        do {
-            let category = try coreDataManager.mainManagedObjectContext.fetch(request)
-            return category.first
-        } catch {
-            print("Unable to fetch managed objects for entity Product.")
-        }
-        return nil
-    }
-    
-    static func storeJSONToDB(data: ProductsResponseModel, completion: @escaping (_ success: Bool) -> Void) {
-        for categoryData in data.categories {
-            _ = categoryData.map(from: categoryData, with: coreDataManager.mainManagedObjectContext)
-        }
-        storeRank(data: data)
-        coreDataManager.saveChanges()
-        completion(true)
-    }
-    
-    static func storeRank(data: ProductsResponseModel) {
+extension NSManagedObject {
 
-        func updateRankObject(_ newOrUpdated: RankingProductResponseModel) {
-            let request = NSFetchRequest<Product>(entityName: "Product")
-            request.predicate = NSPredicate(format: "id = %d", newOrUpdated.id)
-            request.returnsObjectsAsFaults = false
-            do {
-                let result = try coreDataManager.mainManagedObjectContext.fetch(request)
-                if let rankInfo = result.first?.rankInfo {
-                    if let viewCount = newOrUpdated.viewCount {
-                       rankInfo.viewCount = Int32(viewCount)
-                   }
-                   if let orderCount = newOrUpdated.orderCount {
-                       rankInfo.orderCount = Int32(orderCount)
-                   }
-                   if let shares = newOrUpdated.shares {
-                       rankInfo.shares = Int32(shares)
-                   }
-                }
-                else {
-                    print("CREATE NEW RANK TB")
-                }
-            } catch {
-                print("Unable to fetch managed objects for entity Rank for Updation.")
-            }
-        }
-        
-        for rankType in data.rankings {
-            for rankData in rankType.products {
-                updateRankObject(rankData)
-            }
-        }
-    }
-    
-    static func getAllCategory() -> [Category] {
-        let request = NSFetchRequest<Category>(entityName: "Category")
+     /// Returns the entity name for the current class.
+     
+     static var entityName : String {
+         return String(describing:self)
+     }
+     
+     
+     /// Returns the entity description for the current class.
+     
+     static var entityDescription : NSEntityDescription {
+         return NSEntityDescription.entity(forEntityName: entityName, in: managedObjectContext)!
+     }
+
+     
+     /// Returns the current managed object context.
+     
+     static var managedObjectContext : NSManagedObjectContext {
+         return (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+     }
+     
+    class func countAll() -> Int {
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
         do {
-            let categories = try DatabaseManager.coreDataManager.mainManagedObjectContext.fetch(request)
-            return categories
+            return try managedObjectContext.count(for: request)
         } catch {
-            print("Unable to fetch managed objects for entity categories.")
+            debugPrint(error.localizedDescription)
+            return 0
         }
-        return []
     }
     
-    static func getAllProduct(ofCategory: Int? = nil, sortBy: RankType? = RankType.order) -> [Product] {
-        
-        var sortKeyString: String = "rankInfo.orderCount"
-        if let sortBy = sortBy {
-            switch sortBy {
-            case .order:
-                sortKeyString = "rankInfo.orderCount"
-            case .share:
-                sortKeyString = "rankInfo.shares"
-            case .views:
-                sortKeyString = "rankInfo.viewCount"
-            }
-        }
-        
-        let request = NSFetchRequest<Product>(entityName: "Product")
-        if let categoryID = ofCategory {
-            request.predicate = NSPredicate(format: "category.id = %d", categoryID)
-        }
-        request.sortDescriptors = [NSSortDescriptor(key: sortKeyString, ascending: false)]
+    /// Delete all objects of the current entity.
+    
+    class func deleteAll() throws {
         
         do {
-            let products = try DatabaseManager.coreDataManager.mainManagedObjectContext.fetch(request)
-            return products
-        } catch {
-            print("Unable to fetch managed objects for entity products.")
+            let request = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
+            let batchDeleteRequest = NSBatchDeleteRequest(fetchRequest: request)
+            try managedObjectContext.execute(batchDeleteRequest)
+            
+        } catch let deleteAllError {
+            fatalError("Delete All Error for \(entityName): \(deleteAllError)")
         }
         
-        return []
+        do {
+            try managedObjectContext.save()
+        } catch let deleteError {
+            fatalError("Failed deleting \(deleteError)")
+        }
+    }
+
+    /// Fetch all objects of the current entity.
+
+    class func fetchAll<T:NSManagedObject>() throws -> [T]? {
+        do {
+            return try fetch(predicate: nil, sortDescriptor: nil)
+        } catch let fetchAllError {
+            fatalError("Fetch All Error for \(entityName): \(fetchAllError)")
+        }
+        
     }
     
+    /// Fetch all objects of the current entity based on predicate.
+    
+    class func fetch<T:NSManagedObject>(predicate: NSPredicate?=nil, sortDescriptor: NSSortDescriptor?=nil) throws -> [T]? {
+
+        do {
+            let request = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
+
+            // Add predicate if any
+            if let predicate = predicate {
+                request.predicate = predicate
+            }
+            
+            // Add sortDescriptor if any
+            if let sortDescriptor = sortDescriptor {
+                request.sortDescriptors = [sortDescriptor]
+            }
+
+            let fetchData = try managedObjectContext.fetch(request)
+            return fetchData as? [T]
+        
+                        
+        } catch let fetchError {
+            fatalError("Fetch Error for \(entityName): \(fetchError)")
+        }
+        
+    }
+    
+    class func saveAllInventory(productInfo: ProductInfo) {
+        
+        let categoryList = productInfo.categories
+        let rankingList = productInfo.rankings
+                
+        for categoryData in categoryList {
+
+            let categoryEntity = CategoryEntity(context: managedObjectContext)
+            categoryEntity.id = Int16(categoryData.id)
+            categoryEntity.name = categoryData.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            categoryEntity.childCategories = categoryData.childCategories
+            
+            // Search parent cateogry
+            let filteredList = categoryList.filter { (categoryObj) -> Bool in
+                return categoryObj.childCategories.contains(categoryData.id)
+            }
+            
+            categoryEntity.parentCategoryId = Int16(filteredList.first?.id ?? -1)
+            
+            // Setting products
+            let productList = createProductEntity(products: categoryData.products, rankingList: rankingList)
+            categoryEntity.addToProducts(NSSet(array: productList))
+            
+        }
+        
+        
+        do {
+           try managedObjectContext.save()
+          } catch let saveError {
+           fatalError("Failed saving \(saveError)")
+        }
+
+    }
+
+    private class func createProductVarientEntity(variants: [Variant]) -> [ProductVarientEntity] {
+        var variantEntityList = [ProductVarientEntity]()
+        
+        for varient in variants {
+            
+            let varientEntity = ProductVarientEntity(context: managedObjectContext)
+            varientEntity.id = Int16(varient.id)
+            varientEntity.size = Int16(varient.size ?? -1)
+            varientEntity.color = varient.color
+            varientEntity.price = Int32(varient.price)
+            
+            variantEntityList.append(varientEntity)
+            
+        }
+        
+        return variantEntityList
+    }
+
+    private class func createProductTaxEntity(tax: Tax) -> ProductTaxEntity {
+        let taxEntity = ProductTaxEntity(context: managedObjectContext)
+        taxEntity.name = tax.name
+        taxEntity.tax = tax.value
+        return taxEntity
+    }
+
+    private class func createProductEntity(products: [Product], rankingList: [Ranking]) -> [ProductEntity] {
+        var productList = [ProductEntity]()
+        
+        for product in products {
+            
+            let productEntity = ProductEntity(context: managedObjectContext)
+            productEntity.id = Int16(product.id)
+            productEntity.name = product.name
+            productEntity.dateAdded = product.dateAdded.toDate() ?? Date()
+            
+            // Setting product ratings i.e. orderCount, viewCount, shares
+            for list in rankingList {
+                
+                if let firstProduct = (list.products.filter { $0.id == product.id}).first {
+                    
+                    if let orderCount = firstProduct.orderCount {
+                        productEntity.orderCount = Int32(orderCount)
+                    }
+
+                    if let viewCount = firstProduct.viewCount {
+                        productEntity.viewCount = Int32(viewCount)
+                    }
+
+                    if let shares = firstProduct.shares {
+                        productEntity.shares = Int32(shares)
+                    }
+
+                }
+                
+            }
+            
+            // Setting product variant
+            let productVarients = createProductVarientEntity(variants: product.variants)
+            productEntity.addToVariants(NSSet(array: productVarients))
+
+            // Tax
+            productEntity.tax = createProductTaxEntity(tax: product.tax)
+            
+            productList.append(productEntity)
+            
+        }
+        
+        return productList
+    }
+
+}
+
+
+extension NSObjectProtocol {
+
+    var className: String {
+        return String(describing: Self.self)
+    }
+    
+
+    static var className: String {
+        return String(describing: self)
+    }
+
 }

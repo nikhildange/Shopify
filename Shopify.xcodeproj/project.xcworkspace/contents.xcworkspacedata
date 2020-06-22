@@ -2,6 +2,13 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:Shopify.xcodeproj">
+      location = "group:../Shopify/DBModel 2.xcdatamodel">
+   </FileRef>
+   <Group
+      location = "container:"
+      name = "New Group">
+   </Group>
+   <FileRef
+      location = "self:">
    </FileRef>
 </Workspace>

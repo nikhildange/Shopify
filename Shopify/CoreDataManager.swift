@@ -6,136 +6,159 @@
 //  Copyright © 2020 nikhil. All rights reserved.
 //
 
+
 import CoreData
 import UIKit
 
-final class CoreDataManager {
 
-    // MARK: - Properties
-
-    let modelName: String
-
-    // MARK: -
-
+protocol Fetchable
+{
+    associatedtype FetchableType: NSManagedObject = Self
+    associatedtype AttributeName: RawRepresentable
     
-    private lazy var filterManagedObjectContext: NSManagedObjectContext = {
-        // Initialize Managed Object Context
-        let managedObjectContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-        
-        // Configure Managed Object Context
-        managedObjectContext.persistentStoreCoordinator = self.persistentStoreCoordinator
-        
-        return managedObjectContext
-    }()
+    static var entityName : String { get }
+    static var entityDescription : NSEntityDescription { get }
+    static var managedObjectContext : NSManagedObjectContext { get }
     
-    private(set) lazy var mainManagedObjectContext: NSManagedObjectContext = {
-        // Initialize Managed Object Context
-        let managedObjectContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+    static func objects() throws -> [FetchableType]
+    static func objects(for predicate: NSPredicate?, sortedBy: AttributeName?, ascending: Bool, fetchLimit: Int) throws -> [FetchableType]
+    static func objects(sortedBy sortDescriptors: [NSSortDescriptor], predicate: NSPredicate?, fetchLimit: Int) throws -> [FetchableType]
+    static func objects(sortedBy sortCriteria: (AttributeName, Bool)..., predicate: NSPredicate?, fetchLimit: Int) throws -> [FetchableType]
+    
+    static func object() throws -> FetchableType?
+    static func object(for predicate: NSPredicate?, sortedBy: AttributeName?, ascending: Bool) throws -> FetchableType?
+    static func object(sortedBy sortDescriptors: [NSSortDescriptor], predicate: NSPredicate?) throws -> FetchableType?
+    static func object(sortedBy sortCriteria: (AttributeName, Bool)..., predicate: NSPredicate?) throws -> FetchableType?
+    
+    static func objectCount(for predicate: NSPredicate?) throws -> Int
+    static func insertNewObject() -> FetchableType
+    static func deleteAll() throws
+}
 
-        // Configure Managed Object Context
-        managedObjectContext.parent = self.privateManagedObjectContext
-        managedObjectContext.mergePolicy = NSMergePolicy(merge: NSMergePolicyType.mergeByPropertyObjectTrumpMergePolicyType)
-
-        return managedObjectContext
-    }()
-
-    private lazy var privateManagedObjectContext: NSManagedObjectContext = {
-        // Initialize Managed Object Context
-        let managedObjectContext = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
-
-        // Configure Managed Object Context
-        managedObjectContext.persistentStoreCoordinator = self.persistentStoreCoordinator
-        managedObjectContext.mergePolicy = NSMergePolicy(merge: NSMergePolicyType.mergeByPropertyObjectTrumpMergePolicyType)
-
-        return managedObjectContext
-    }()
-
-    private lazy var managedObjectModel: NSManagedObjectModel = {
-        // Fetch Model URL
-        guard let modelURL = Bundle.main.url(forResource: self.modelName, withExtension: "momd") else {
-            fatalError("Unable to Find Data Model")
-        }
-
-        // Initialize Managed Object Model
-        guard let managedObjectModel = NSManagedObjectModel(contentsOf: modelURL) else {
-            fatalError("Unable to Load Data Model")
-        }
-
-        return managedObjectModel
-    }()
-
-    private lazy var persistentStoreCoordinator: NSPersistentStoreCoordinator = {
-        // Initialize Persistent Store Coordinator
-        let persistentStoreCoordinator = NSPersistentStoreCoordinator(managedObjectModel: self.managedObjectModel)
-
-        // Helpers
-        let fileManager = FileManager.default
-        let storeName = "\(self.modelName).sqlite"
-
-        // URL Documents Directory
-        let documentsDirectoryURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-
-        // URL Persistent Store
-        let persistentStoreURL = documentsDirectoryURL.appendingPathComponent(storeName)
-
-        do {
-            // Add Persistent Store
-            let options = [ NSMigratePersistentStoresAutomaticallyOption : true, NSInferMappingModelAutomaticallyOption : true ]
-            try persistentStoreCoordinator.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: persistentStoreURL, options: options)
-
-        } catch {
-            fatalError("Unable to Add Persistent Store")
-        }
-
-        return persistentStoreCoordinator
-    }()
-
-    // MARK: - Initialization
-
-    init(modelName: String) {
-        self.modelName = modelName
-        
-        setupNotificationHandling()
+extension Fetchable where Self : NSManagedObject, AttributeName.RawValue == String
+{
+    static var entityName : String {
+        return String(describing:self)
     }
-
-    // MARK: - Notification Handling
-
-    @objc func saveChanges(_ notification: Notification) {
-        saveChanges()
+    
+    static var entityDescription : NSEntityDescription {
+        return NSEntityDescription.entity(forEntityName: entityName, in: managedObjectContext)!
     }
-
-    // MARK: - Helper Methods
-
-    private func setupNotificationHandling() {
-        let notificationCenter = NotificationCenter.default
-        notificationCenter.addObserver(self, selector: #selector(saveChanges(_:)), name: UIApplication.willTerminateNotification, object: nil)
-        notificationCenter.addObserver(self, selector: #selector(saveChanges(_:)), name: UIApplication.didEnterBackgroundNotification, object: nil)
+    
+    
+    static var managedObjectContext : NSManagedObjectContext {
+        return (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     }
-
-    // MARK: -
-
-    public func saveChanges() {
-        mainManagedObjectContext.performAndWait {
-            do {
-                if self.mainManagedObjectContext.hasChanges {
-                    try self.mainManagedObjectContext.save()
-                }
-            } catch {
-                print("Unable to Save Changes of Main Managed Object Context")
-                print("\(error), \(error.localizedDescription)")
+    
+    static func objects() throws -> [FetchableType] {
+        let request = fetchRequest(predicate: nil, sortedBy: nil, ascending:true, fetchLimit: 0)
+        return try managedObjectContext.fetch(request)
+    }
+    
+    static func objects(for predicate: NSPredicate? = nil,
+                        sortedBy: AttributeName? = nil,
+                        ascending: Bool = true,
+                        fetchLimit: Int = 0) throws -> [FetchableType]
+    {
+        let request = fetchRequest(predicate: predicate, sortedBy: sortedBy, ascending: ascending, fetchLimit: fetchLimit)
+        return try managedObjectContext.fetch(request)
+    }
+    
+    static func objects(sortedBy sortDescriptors: [NSSortDescriptor],
+                        predicate: NSPredicate? = nil,
+                        fetchLimit: Int = 0) throws -> [FetchableType]
+    {
+        let request = fetchRequest(predicate: predicate, sortDescriptors: sortDescriptors, fetchLimit: fetchLimit)
+        return try managedObjectContext.fetch(request)
+    }
+    
+    
+    static func objects(sortedBy sortCriteria: (AttributeName, Bool)...,
+                        predicate: NSPredicate? = nil,
+                        fetchLimit: Int = 0) throws -> [FetchableType]
+    {
+        let sortDescriptors = sortCriteria.map{ NSSortDescriptor(key: $0.0.rawValue, ascending: $0.1)  }
+        let request = fetchRequest(predicate: predicate, sortDescriptors: sortDescriptors, fetchLimit: fetchLimit)
+        return try managedObjectContext.fetch(request)
+    }
+    
+    
+    static func object() throws -> FetchableType? {
+        let request = fetchRequest(predicate: nil, sortedBy: nil, ascending:true, fetchLimit: 1)
+        return try managedObjectContext.fetch(request).first
+    }
+    
+    
+    static func object(for predicate: NSPredicate? = nil,
+                       sortedBy: AttributeName? = nil,
+                       ascending: Bool = true) throws -> FetchableType?
+    {
+        return try objects(for: predicate, sortedBy: sortedBy, ascending: ascending).first
+    }
+    
+    
+    static func object(sortedBy sortDescriptors: [NSSortDescriptor],
+                       predicate: NSPredicate? = nil) throws -> FetchableType?
+    {
+        return try objects(sortedBy: sortDescriptors, predicate: predicate, fetchLimit: 1).first
+    }
+    
+    
+   static func object(sortedBy sortCriteria: (AttributeName, Bool)...,
+                        predicate: NSPredicate? = nil) throws -> FetchableType?
+    {
+        let sortDescriptors = sortCriteria.map{ NSSortDescriptor(key: $0.0.rawValue, ascending: $0.1)  }
+        return try objects(sortedBy: sortDescriptors, predicate: predicate, fetchLimit: 1).first
+    }
+    
+    
+    static func objectCount(for predicate: NSPredicate? = nil) throws -> Int
+    {
+        let request = fetchRequest(predicate: predicate)
+        return try managedObjectContext.count(for: request)
+    }
+    
+    
+    private static func fetchRequest(predicate: NSPredicate? = nil,
+                             sortedBy: AttributeName? = nil,
+                             ascending: Bool = true,
+                             fetchLimit: Int = 0) -> NSFetchRequest<FetchableType>
+    {
+        let sortDescriptors : [NSSortDescriptor]? = sortedBy != nil ? [NSSortDescriptor(key: sortedBy!.rawValue, ascending: ascending)] : nil
+        return fetchRequest(predicate: predicate, sortDescriptors: sortDescriptors, fetchLimit: fetchLimit)
+    }
+    
+    
+    private static func fetchRequest(predicate: NSPredicate? = nil,
+                             sortDescriptors: [NSSortDescriptor]?,
+                             fetchLimit: Int = 0) -> NSFetchRequest<FetchableType>
+    {
+        let request = NSFetchRequest<FetchableType>(entityName: entityName)
+        request.predicate = predicate
+        request.sortDescriptors = sortDescriptors
+        request.fetchLimit = fetchLimit
+        return request
+    }
+    
+    
+    static func insertNewObject() -> FetchableType
+    {
+        return NSEntityDescription.insertNewObject(forEntityName: entityName, into: managedObjectContext) as! FetchableType
+    }
+    
+    
+    static func deleteAll() throws
+    {
+        let request = NSFetchRequest<FetchableType>(entityName: entityName)
+        if #available(iOS 9, macOS 10.11, *) {
+            let deleteRequest = NSBatchDeleteRequest(fetchRequest: request as! NSFetchRequest<NSFetchRequestResult>)
+            let persistentStoreCoordinator = managedObjectContext.persistentStoreCoordinator!
+            try persistentStoreCoordinator.execute(deleteRequest, with: managedObjectContext)
+        } else {
+            let fetchResults = try managedObjectContext.fetch(request)
+            for anItem in fetchResults {
+                managedObjectContext.delete(anItem)
             }
         }
-
-        privateManagedObjectContext.perform {
-            do {
-                if self.privateManagedObjectContext.hasChanges {
-                    try self.privateManagedObjectContext.save()
-                }
-            } catch {
-                print("Unable to Save Changes of Private Managed Object Context")
-                print("\(error), \(error.localizedDescription)")
-            }
-        }
     }
-
 }

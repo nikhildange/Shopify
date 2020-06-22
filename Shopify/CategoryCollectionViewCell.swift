@@ -17,7 +17,7 @@ protocol ReusableCell {
 struct CategoryCollectionViewCellViewModel {
     
     // MARK: - Properties
-    let category: Category
+    let category: CategoryEntity
     
     var name: String {
         return category.name!

@@ -12,8 +12,9 @@ import CoreData
 
 class CollectionViewController: UICollectionViewController {
     
-    var categoryDataSource = [Category]()
-    var productDataSource = [Product]()
+    var categoryEntityList:[CategoryEntity] = []
+    var productEntityList:[ProductEntity] = []
+    var parentCatergoryStack:[CategoryEntity] = []
     var productRankViewType: RankType = .order
 
     private let reuseIdentifier = "Cell"
@@ -30,7 +31,6 @@ class CollectionViewController: UICollectionViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        NetworkManager.requestProductData()
         
         collectionView.collectionViewLayout = CollectionViewController.createLayout()
         collectionView.backgroundColor = .white
@@ -44,10 +44,26 @@ class CollectionViewController: UICollectionViewController {
         collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: cellId)
         collectionView.register(CategoryHeader.self, forSupplementaryViewOfKind: CategoryHeader.categoryHeader, withReuseIdentifier: CategoryHeader.categoryHeaderID)
         collectionView.register(RankSegmentView.self, forSupplementaryViewOfKind: RankSegmentView.rankSegmentView, withReuseIdentifier: RankSegmentView.rankSegmentViewID)
-        reloadDataFromDB()
         
-        NotificationCenter.default.addObserver(self, selector: #selector(self.reloadDataFromDB), name: Notification.Name("DataFetched"), object: nil)
-        
+        if let categoryEntityList = fetchCategoryDataFromDatabase(), !categoryEntityList.isEmpty {
+            self.categoryEntityList = categoryEntityList
+            self.productEntityList = fetchProductDataFromDatabase() ?? []
+            collectionView.reloadData()
+        }
+        else {
+            NetworkManager.requestProductData() {  [weak self]  (success) in
+                if success {
+                     DispatchQueue.main.async {
+                        self?.categoryEntityList = self?.fetchCategoryDataFromDatabase() ?? []
+                        self?.productEntityList = self?.fetchProductDataFromDatabase() ?? []
+                        self?.collectionView.reloadData()
+                    }
+                }
+                else {
+                    print("Save Error")
+                }
+            }
+        }
     }
         
     static func createLayout() -> UICollectionViewCompositionalLayout {
@@ -68,10 +84,10 @@ class CollectionViewController: UICollectionViewController {
                 
                 let group1 = NSCollectionLayoutGroup.vertical(layoutSize: .init(widthDimension: .fractionalWidth(0.45), heightDimension: .estimated(500)), subitems: [item1, item2])
                 let section = NSCollectionLayoutSection(group: group1)
-                section.contentInsets = .init(top: 16, leading: 8, bottom: 32, trailing: 16)
+                section.contentInsets = .init(top: 8, leading: 8, bottom: 32, trailing: 8)
                 section.orthogonalScrollingBehavior = .groupPaging
                 section.boundarySupplementaryItems = [
-                    .init(layoutSize: .init(widthDimension: .fractionalWidth(0.9), heightDimension: .estimated(50)), elementKind: CategoryHeader.categoryHeader, alignment: .top)
+                    .init(layoutSize: .init(widthDimension: .fractionalWidth(0.9), heightDimension: .estimated(60)), elementKind: CategoryHeader.categoryHeader, alignment: .topLeading)
                              ]
                 return section
             } else {
@@ -96,7 +112,7 @@ class CollectionViewController: UICollectionViewController {
                 section.contentInsets = .init(top: 16, leading: 8, bottom: 8, trailing: 8)
                 section.orthogonalScrollingBehavior = .groupPagingCentered
                 section.boundarySupplementaryItems = [
-                    .init(layoutSize: .init(widthDimension: .fractionalWidth(0.9), heightDimension: .estimated(70)), elementKind: RankSegmentView.rankSegmentView, alignment: .top)
+                    .init(layoutSize: .init(widthDimension: .fractionalWidth(0.9), heightDimension: .estimated(80)), elementKind: RankSegmentView.rankSegmentView, alignment: .topLeading)
                              ]
                 return section
                 }
@@ -112,10 +128,10 @@ class CollectionViewController: UICollectionViewController {
     
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if section == 0 {
-            return categoryDataSource.count
+            return categoryEntityList.count
         }
         else if section == 1 {
-            return categoryDataSource.count > 5 ? 6 : 0
+            return productEntityList.count > 5 ? 6 : 0
         }
         return 8
     }
@@ -126,20 +142,24 @@ class CollectionViewController: UICollectionViewController {
         let row = indexPath.row
         if section == 0 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CategoryCollectionViewCell.reuseIdentifier, for: indexPath) as! CategoryCollectionViewCell
-            cell.backgroundColor = .red
-            cell.configure(viewModel: CategoryCollectionViewCellViewModel(category: categoryDataSource[row]))
+            cell.configure(viewModel: CategoryCollectionViewCellViewModel(category: categoryEntityList[row]))
+//            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath)
+//            let title = UILabel(frame: CGRect(x: 0, y: 0, width: cell.bounds.size.width, height: 50))
+//            cell.layoutIfNeeded()
+//            title.text = categoryEntityList[indexPath.item].name
+//            cell.contentView.addSubview(title)
+//            cell.contentView.layer.borderWidth = 1
             return cell
         }
         else if section == 1 {
             if row < 5 {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ProductCollectionViewCell.reuseIdentifier, for: indexPath) as! ProductCollectionViewCell
-                cell.backgroundColor = .gray
-                cell.configure(viewModel: ProductCollectionViewCellViewModel(product: productDataSource[row]))
+                cell.configure(viewModel: ProductCollectionViewCellViewModel(product: productEntityList[row]))
                 return cell
             }
             else {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellId, for: indexPath)
-                
+
                 let seeMoreButton = UIButton()
                 seeMoreButton.setTitle("See more..", for: .normal)
                 seeMoreButton.setTitleColor(UIColor.gray, for: .normal)
@@ -161,7 +181,9 @@ class CollectionViewController: UICollectionViewController {
     override func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         let section = indexPath.section
         if section == 0 {
-            let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: CategoryHeader.categoryHeaderID, for: indexPath)
+            let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: CategoryHeader.categoryHeaderID, for: indexPath) as! CategoryHeader
+            header.categoryHeaderDelegate = self
+            header.headerTitle = parentCatergoryStack.last?.name ?? nil
             return header
         }
         else {
@@ -177,22 +199,36 @@ class CollectionViewController: UICollectionViewController {
     
     
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
         let section = indexPath.section
         if section == 0 {
-            let vc = storyboard.instantiateViewController(withIdentifier: "CategoryCollectionViewControllerID") as! CategoryCollectionViewController
-            vc.categoryInfo = categoryDataSource[indexPath.row]
-            navigationController?.pushViewController(vc, animated: true)
+            let selectedCategory = categoryEntityList[indexPath.row]
+            if selectedCategory.childCategories.count > 0 { // Reload list with subcategories
+                parentCatergoryStack.append(selectedCategory)
+                let predicate = NSPredicate(format: "ANY self.id in %@", selectedCategory.childCategories)
+                guard let categoryList = try? CategoryEntity.fetch(predicate: predicate, sortDescriptor: nil) as? [CategoryEntity], categoryList.count > 0 else {
+                    fatalError("No subcategory found")
+                }
+                categoryEntityList = categoryList
+                collectionView.reloadSections(IndexSet(integer: 0))
+                }
+            else {
+                let storyboard = UIStoryboard(name: "Main", bundle: nil)
+                let vc = storyboard.instantiateViewController(withIdentifier: "CategoryCollectionViewControllerID") as! CategoryCollectionViewController
+                vc.categoryInfo = selectedCategory
+                navigationController?.pushViewController(vc, animated: true)
+            }
         }
         else {
+            let storyboard = UIStoryboard(name: "Main", bundle: nil)
             let vc = storyboard.instantiateViewController(withIdentifier: "ProductViewControllerID") as! ProductViewController
-            vc.productInfo = productDataSource[indexPath.row]
+            vc.productInfo = productEntityList[indexPath.row]
             navigationController?.pushViewController(vc, animated: true)
         }
+        
     }
-    
+
     // MARK : Action
-    
+
     @objc func seeMoreTapped(_ sender: UIButton) {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         let vc = storyboard.instantiateViewController(withIdentifier: "CategoryCollectionViewControllerID") as! CategoryCollectionViewController
@@ -202,49 +238,77 @@ class CollectionViewController: UICollectionViewController {
     }
     
     
-    @objc func reloadDataFromDB() {
-        categoryDataSource = DatabaseManager.getAllCategory()
-        productDataSource = DatabaseManager.getAllProduct()
-        DispatchQueue.main.async {
-            self.collectionView.reloadData()
+    func fetchCategoryDataFromDatabase() -> [CategoryEntity]? {
+        let predicate = NSPredicate(format: "self.parentCategoryId == -1")
+        let sortDescriptor = NSSortDescriptor(key: "name", ascending: true)
+        let fetchData = try? CategoryEntity.fetch(predicate: predicate, sortDescriptor: sortDescriptor) as? [CategoryEntity]
+        return fetchData
+    }
+    
+    func fetchProductDataFromDatabase() -> [ProductEntity]?  {
+            var predicate: NSPredicate? = nil
+            var sortDescriptor: NSSortDescriptor? = nil
+            
+            switch productRankViewType {
+            case .views:
+                predicate = NSPredicate(format: "viewCount > 0")
+                sortDescriptor = NSSortDescriptor(key: "viewCount", ascending: false)
+                
+            case.order:
+                predicate = NSPredicate(format: "orderCount > 0")
+                sortDescriptor = NSSortDescriptor(key: "orderCount", ascending: false)
+                
+            case .share:
+                predicate = NSPredicate(format: "shares > 0")
+                sortDescriptor = NSSortDescriptor(key: "shares", ascending: false)
+            case .all:
+                sortDescriptor = NSSortDescriptor(key: "name", ascending: true)
         }
+            if let fetchList = try? ProductEntity.fetch(predicate: predicate, sortDescriptor: sortDescriptor) as? [ProductEntity] {
+                return fetchList
+            }
+        return nil
     }
 
 }
 
 extension CollectionViewController: RankSegmentViewDelegate {
     func didSelect(rankType: RankType) {
-        productDataSource = DatabaseManager.getAllProduct(sortBy: rankType)
         productRankViewType = rankType
+        reloadProductData()
+    }
+    
+    func reloadProductData()  {
+        productEntityList = fetchProductDataFromDatabase() ?? []
         collectionView.reloadSections(IndexSet(integer: 1))
     }
+    
+    func reloadCategoryData() {
+        categoryEntityList = fetchCategoryDataFromDatabase() ?? []
+        collectionView.reloadSections(IndexSet(integer: 0))
+    }
 }
 
 
-extension CollectionViewController: NSFetchedResultsControllerDelegate {
+extension CollectionViewController: CategoryHeaderDelegate {
+    func didTapCategoryHomeButton() {
+        parentCatergoryStack.removeAll()
+        reloadCategoryData()
+    }
     
+    func didTapCategoryBackButton() {
+        _ = parentCatergoryStack.popLast()
+        if let parentCategory = parentCatergoryStack.last {
+            let predicate = NSPredicate(format: "ANY self.id in %@", parentCategory.childCategories)
+            guard let categoryList = try? CategoryEntity.fetch(predicate: predicate, sortDescriptor: nil) as? [CategoryEntity], categoryList.count > 0 else {
+                fatalError("No subcategory found")
+            }
+            categoryEntityList = categoryList
+            collectionView.reloadSections(IndexSet(integer: 0))
+        }
+        else {
+            reloadCategoryData()
+        }
+    }
 }
 
-class CategoryHeader: UICollectionReusableView {
-    
-    static let categoryHeader = "categoryHeader"
-    static let categoryHeaderID = "categoryHeaderID"
-    
-    let label = UILabel()
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        label.font = label.font.withSize(20)
-        label.textAlignment = .left
-        label.text = "Categories:"
-        addSubview(label)
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        label.frame = bounds
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-}

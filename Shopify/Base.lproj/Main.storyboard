@@ -17,10 +17,10 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="24" translatesAutoresizingMaskIntoConstraints="NO" id="cVE-WY-Smc">
-                                <rect key="frame" x="10.5" y="94" width="393" height="280"/>
+                                <rect key="frame" x="10.5" y="94" width="393" height="238"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="fillProportionally" spacing="12" translatesAutoresizingMaskIntoConstraints="NO" id="VMW-g0-vcq">
-                                        <rect key="frame" x="0.0" y="0.0" width="393" height="127.5"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="393" height="85.5"/>
                                         <subviews>
                                             <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="jhB-Hg-cAP">
                                                 <rect key="frame" x="0.0" y="0.0" width="393" height="20.5"/>
@@ -73,17 +73,17 @@
                                                     </label>
                                                 </subviews>
                                             </stackView>
-                                            <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="3gU-Fy-qsT">
-                                                <rect key="frame" x="0.0" y="97.5" width="393" height="30"/>
+                                            <stackView hidden="YES" opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="3gU-Fy-qsT">
+                                                <rect key="frame" x="0.0" y="85.5" width="393" height="0.0"/>
                                                 <subviews>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Category:" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="pgs-vA-LyT">
-                                                        <rect key="frame" x="0.0" y="0.0" width="192.5" height="30"/>
+                                                        <rect key="frame" x="0.0" y="0.0" width="192.5" height="0.0"/>
                                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                         <nil key="textColor"/>
                                                         <nil key="highlightedColor"/>
                                                     </label>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="qU4-z5-vlB">
-                                                        <rect key="frame" x="200.5" y="0.0" width="192.5" height="30"/>
+                                                        <rect key="frame" x="200.5" y="0.0" width="192.5" height="0.0"/>
                                                         <state key="normal" title="c_name"/>
                                                         <connections>
                                                             <action selector="didTapAtCategoryButton:" destination="BYZ-38-t0r" eventType="touchUpInside" id="T3I-Tv-FYJ"/>
@@ -94,7 +94,7 @@
                                         </subviews>
                                     </stackView>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="fillProportionally" spacing="12" translatesAutoresizingMaskIntoConstraints="NO" id="PA1-bN-qDM">
-                                        <rect key="frame" x="0.0" y="151.5" width="393" height="128.5"/>
+                                        <rect key="frame" x="0.0" y="109.5" width="393" height="128.5"/>
                                         <subviews>
                                             <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="bOi-5q-nBn">
                                                 <rect key="frame" x="0.0" y="0.0" width="393" height="32"/>
@@ -176,7 +176,6 @@
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
                     <connections>
-                        <outlet property="categoryButton" destination="qU4-z5-vlB" id="jgO-lI-Oxv"/>
                         <outlet property="colorLabel" destination="oY0-fJ-SC3" id="oZP-h3-680"/>
                         <outlet property="priceLabel" destination="mMh-uu-n4e" id="Alg-TP-xGh"/>
                         <outlet property="productAddedDateLabel" destination="Dve-ad-HdE" id="9Ic-0L-mwx"/>
@@ -225,22 +224,6 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="kTX-JX-KWy" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="2710.144927536232" y="91.741071428571431"/>
-        </scene>
-        <!--View Controller-->
-        <scene sceneID="6iY-K7-4Q7">
-            <objects>
-                <viewController storyboardIdentifier="ViewControllerID" id="naw-Kh-XXG" customClass="ViewController" customModule="Shopify" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="Xbf-5y-lxB">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
-                        <viewLayoutGuide key="safeArea" id="eNA-3T-3dj"/>
-                    </view>
-                    <navigationItem key="navigationItem" id="Xx5-PR-lhM"/>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="aRe-5E-WM0" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="3581.1594202898555" y="904.6875"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="2zk-T7-Alr">

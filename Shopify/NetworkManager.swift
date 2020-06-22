@@ -10,33 +10,29 @@ import Foundation
 
 struct NetworkManager {
     
-    static func requestProductData() {
+    static func requestProductData(completion: @escaping (Bool) -> Void) {
     guard let url = URL(string: "https://stark-spire-93433.herokuapp.com/json") else {
         print("NW: Invalid URL")
         return
     }
     
-    let task = URLSession.shared.dataTask(with: url, completionHandler: responseHandler(data:response:error:))
-    task.resume()
-}
-
-    static func responseHandler(data: Data?, response: URLResponse?, error: Error?){
-    guard let data = data else {
-        print("NW: Data nil; Error: \(error?.localizedDescription ?? "nil")")
-        return
-    }
-    
-    do {
-        let productsData = try JSONDecoder().decode(ProductsResponseModel.self, from: data)
-        print(productsData)
-        DatabaseManager.storeJSONToDB(data: productsData, completion: {_ in
-            NotificationCenter.default.post(name: Notification.Name("DataFetched"), object: nil)
+        let task = URLSession.shared.dataTask(with: url, completionHandler:{ data,response,error in
+            guard let data = data else {
+                print("NW: Data nil; Error: \(error?.localizedDescription ?? "nil")")
+                return
+            }
+            do {
+                let productInfo = try JSONDecoder().decode(ProductInfo.self, from: data)
+                try? CategoryEntity.deleteAll()
+                CategoryEntity.saveAllInventory(productInfo: productInfo)
+                completion(true)
+            } catch (let error) {
+                print("NW: Parsing Error: \(error.localizedDescription)")
+                completion(false)
+            }
         })
-        print("Documents Directory: ", FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).last ?? "Not Found!")
-    } catch (let error) {
-        print("NW: Parsing Error: \(error.localizedDescription)")
+        task.resume()
     }
-}
 
     
 }
