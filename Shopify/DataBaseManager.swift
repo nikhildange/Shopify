@@ -38,27 +38,47 @@ struct DatabaseManager {
         return nil
     }
     
-    static func storeJSONToDB(data: ProductsResponseModel) {
+    static func storeJSONToDB(data: ProductsResponseModel, completion: @escaping (_ success: Bool) -> Void) {
         for categoryData in data.categories {
             _ = categoryData.map(from: categoryData, with: coreDataManager.mainManagedObjectContext)
         }
-        for rankType in data.rankings {
-            for rankData in rankType.products {
-                do {
-                let product = DatabaseManager.getProduct(Id: rankData.id)!
-                    if let viewCount = rankData.viewCount {
-                        product.rankInfo!.viewCount = Int32(viewCount)
-                    }
-                    if let orderCount = rankData.orderCount {
-                        product.rankInfo!.orderCount = Int32(orderCount)
-                    }
-                    if let shares = rankData.shares {
-                        product.rankInfo!.shares = Int32(shares)
-                    }
+        storeRank(data: data)
+        coreDataManager.saveChanges()
+        completion(true)
+    }
+    
+    static func storeRank(data: ProductsResponseModel) {
+
+        func updateRankObject(_ newOrUpdated: RankingProductResponseModel) {
+            let request = NSFetchRequest<Product>(entityName: "Product")
+            request.predicate = NSPredicate(format: "id = %d", newOrUpdated.id)
+            request.returnsObjectsAsFaults = false
+            do {
+                let result = try coreDataManager.mainManagedObjectContext.fetch(request)
+                if let rankInfo = result.first?.rankInfo {
+                    if let viewCount = newOrUpdated.viewCount {
+                       rankInfo.viewCount = Int32(viewCount)
+                   }
+                   if let orderCount = newOrUpdated.orderCount {
+                       rankInfo.orderCount = Int32(orderCount)
+                   }
+                   if let shares = newOrUpdated.shares {
+                       rankInfo.shares = Int32(shares)
+                   }
                 }
+                else {
+                    print("CREATE NEW RANK TB")
+                }
+            } catch {
+                print("Unable to fetch managed objects for entity Rank for Updation.")
             }
         }
-        coreDataManager.saveChanges()
+        
+        for rankType in data.rankings {
+            for rankData in rankType.products {
+                updateRankObject(rankData)
+            }
+        }
     }
     
     static func getAllCategory() -> [Category] {
@@ -102,8 +122,4 @@ struct DatabaseManager {
         return []
     }
     
-    
-//    func getVariantsOfProduct(id: Int) -> [Variant] {
-//
-//    }
 }

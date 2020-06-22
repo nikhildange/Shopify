@@ -3,7 +3,7 @@
     <entity name="Category" representedClassName="Category" syncable="YES" codeGenerationType="class">
         <attribute name="id" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="name" attributeType="String"/>
-        <relationship name="products" optional="YES" toMany="YES" deletionRule="No Action" destinationEntity="Product" inverseName="category" inverseEntity="Product"/>
+        <relationship name="products" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Product" inverseName="category" inverseEntity="Product"/>
         <uniquenessConstraints>
             <uniquenessConstraint>
                 <constraint value="id"/>
@@ -14,10 +14,10 @@
         <attribute name="dateAdded" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="name" attributeType="String"/>
-        <relationship name="category" optional="YES" maxCount="1" deletionRule="No Action" destinationEntity="Category" inverseName="products" inverseEntity="Category"/>
-        <relationship name="rankInfo" optional="YES" maxCount="1" deletionRule="No Action" destinationEntity="Ranking" inverseName="rankOfProduct" inverseEntity="Ranking"/>
-        <relationship name="tax" optional="YES" maxCount="1" deletionRule="No Action" destinationEntity="Tax" inverseName="taxOfProduct" inverseEntity="Tax"/>
-        <relationship name="variants" optional="YES" toMany="YES" deletionRule="No Action" destinationEntity="Variant" inverseName="variantOfProduct" inverseEntity="Variant"/>
+        <relationship name="category" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Category" inverseName="products" inverseEntity="Category"/>
+        <relationship name="rankInfo" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Ranking" inverseName="rankOfProduct" inverseEntity="Ranking"/>
+        <relationship name="tax" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Tax" inverseName="taxOfProduct" inverseEntity="Tax"/>
+        <relationship name="variants" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Variant" inverseName="variantOfProduct" inverseEntity="Variant"/>
         <uniquenessConstraints>
             <uniquenessConstraint>
                 <constraint value="id"/>
@@ -28,19 +28,19 @@
         <attribute name="orderCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="shares" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="viewCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
-        <relationship name="rankOfProduct" optional="YES" maxCount="1" deletionRule="No Action" destinationEntity="Product" inverseName="rankInfo" inverseEntity="Product"/>
+        <relationship name="rankOfProduct" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Product" inverseName="rankInfo" inverseEntity="Product"/>
     </entity>
     <entity name="Tax" representedClassName="Tax" syncable="YES" codeGenerationType="class">
         <attribute name="name" attributeType="String"/>
         <attribute name="value" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
-        <relationship name="taxOfProduct" optional="YES" maxCount="1" deletionRule="No Action" destinationEntity="Product" inverseName="tax" inverseEntity="Product"/>
+        <relationship name="taxOfProduct" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Product" inverseName="tax" inverseEntity="Product"/>
     </entity>
     <entity name="Variant" representedClassName="Variant" syncable="YES" codeGenerationType="class">
         <attribute name="color" attributeType="String"/>
         <attribute name="id" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="price" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="size" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
-        <relationship name="variantOfProduct" optional="YES" maxCount="1" deletionRule="No Action" destinationEntity="Product" inverseName="variants" inverseEntity="Product"/>
+        <relationship name="variantOfProduct" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Product" inverseName="variants" inverseEntity="Product"/>
         <uniquenessConstraints>
             <uniquenessConstraint>
                 <constraint value="id"/>
@@ -48,10 +48,10 @@
         </uniquenessConstraints>
     </entity>
     <elements>
-        <element name="Tax" positionX="-54" positionY="-9" width="128" height="88"/>
-        <element name="Ranking" positionX="-36" positionY="9" width="128" height="103"/>
         <element name="Category" positionX="-18" positionY="27" width="128" height="88"/>
-        <element name="Variant" positionX="0" positionY="45" width="128" height="118"/>
         <element name="Product" positionX="18" positionY="63" width="128" height="148"/>
+        <element name="Ranking" positionX="-36" positionY="9" width="128" height="103"/>
+        <element name="Tax" positionX="-54" positionY="-9" width="128" height="88"/>
+        <element name="Variant" positionX="0" positionY="45" width="128" height="118"/>
     </elements>
 </model>

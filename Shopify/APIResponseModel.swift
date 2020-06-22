@@ -57,7 +57,7 @@ struct CategoryProductResponseModel: Codable {
         let entity = Product(context: context)
         entity.id = Int32(dto.id)
         entity.name = dto.name
-        entity.dateAdded = Date()//dto.dateAdded
+        entity.dateAdded = dto.dateAdded.toDate() ?? Date()
         for variantData in dto.variants {
             let variant = variantData.map(from: variantData, with: context)
             variant.variantOfProduct = entity

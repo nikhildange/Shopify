@@ -10,7 +10,7 @@ import Foundation
 
 struct NetworkManager {
     
-static func requestProductData() {
+    static func requestProductData() {
     guard let url = URL(string: "https://stark-spire-93433.herokuapp.com/json") else {
         print("NW: Invalid URL")
         return
@@ -20,7 +20,7 @@ static func requestProductData() {
     task.resume()
 }
 
-static func responseHandler(data: Data?, response: URLResponse?, error: Error?) {
+    static func responseHandler(data: Data?, response: URLResponse?, error: Error?){
     guard let data = data else {
         print("NW: Data nil; Error: \(error?.localizedDescription ?? "nil")")
         return
@@ -29,16 +29,10 @@ static func responseHandler(data: Data?, response: URLResponse?, error: Error?) 
     do {
         let productsData = try JSONDecoder().decode(ProductsResponseModel.self, from: data)
         print(productsData)
-        DatabaseManager.storeJSONToDB(data: productsData)
+        DatabaseManager.storeJSONToDB(data: productsData, completion: {_ in
+            NotificationCenter.default.post(name: Notification.Name("DataFetched"), object: nil)
+        })
         print("Documents Directory: ", FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).last ?? "Not Found!")
-    
-//
-//        let cat1 = DatabaseManager.getCategory(Id: 1)
-//        print(cat1!.name)
-//        let cat2 = DatabaseManager.getCategory(Id: 2)
-//        print(cat2!.name!)
-//        print(DatabaseManager.getProduct(Id:14)!.category!.name as Any)
-//
     } catch (let error) {
         print("NW: Parsing Error: \(error.localizedDescription)")
     }

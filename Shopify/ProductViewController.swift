@@ -92,9 +92,9 @@ extension Date
 }
 
 extension String {
-    func toDate(from stringDate: String) -> Date {
+    func toDate() -> Date? {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        return formatter.date(from: stringDate)!
+        return formatter.date(from: self)
     }
 }

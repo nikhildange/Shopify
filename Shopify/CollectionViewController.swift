@@ -7,15 +7,16 @@
 //
 
 import UIKit
+import CoreData
 
-private let reuseIdentifier = "Cell"
 
 class CollectionViewController: UICollectionViewController {
     
     var categoryDataSource = [Category]()
     var productDataSource = [Product]()
     var productRankViewType: RankType = .order
-    
+
+    private let reuseIdentifier = "Cell"
     private let cellId = "cellId"
     
     
@@ -29,6 +30,8 @@ class CollectionViewController: UICollectionViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        NetworkManager.requestProductData()
+        
         collectionView.collectionViewLayout = CollectionViewController.createLayout()
         collectionView.backgroundColor = .white
         navigationItem.title = "Shopify"
@@ -41,13 +44,12 @@ class CollectionViewController: UICollectionViewController {
         collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: cellId)
         collectionView.register(CategoryHeader.self, forSupplementaryViewOfKind: CategoryHeader.categoryHeader, withReuseIdentifier: CategoryHeader.categoryHeaderID)
         collectionView.register(RankSegmentView.self, forSupplementaryViewOfKind: RankSegmentView.rankSegmentView, withReuseIdentifier: RankSegmentView.rankSegmentViewID)
+        reloadDataFromDB()
         
-        categoryDataSource = DatabaseManager.getAllCategory()
-        productDataSource = DatabaseManager.getAllProduct()
+        NotificationCenter.default.addObserver(self, selector: #selector(self.reloadDataFromDB), name: Notification.Name("DataFetched"), object: nil)
         
-        collectionView.reloadData()
     }
-    
+        
     static func createLayout() -> UICollectionViewCompositionalLayout {
         return UICollectionViewCompositionalLayout { (sectionNumber, env) -> NSCollectionLayoutSection? in
             
@@ -113,7 +115,7 @@ class CollectionViewController: UICollectionViewController {
             return categoryDataSource.count
         }
         else if section == 1 {
-            return 6
+            return categoryDataSource.count > 5 ? 6 : 0
         }
         return 8
     }
@@ -200,6 +202,14 @@ class CollectionViewController: UICollectionViewController {
     }
     
     
+    @objc func reloadDataFromDB() {
+        categoryDataSource = DatabaseManager.getAllCategory()
+        productDataSource = DatabaseManager.getAllProduct()
+        DispatchQueue.main.async {
+            self.collectionView.reloadData()
+        }
+    }
+
 }
 
 extension CollectionViewController: RankSegmentViewDelegate {
@@ -208,6 +218,11 @@ extension CollectionViewController: RankSegmentViewDelegate {
         productRankViewType = rankType
         collectionView.reloadSections(IndexSet(integer: 1))
     }
+}
+
+
+extension CollectionViewController: NSFetchedResultsControllerDelegate {
+    
 }
 
 class CategoryHeader: UICollectionReusableView {
