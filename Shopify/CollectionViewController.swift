@@ -51,7 +51,7 @@ class CollectionViewController: UICollectionViewController {
             collectionView.reloadData()
         }
         else {
-            NetworkManager.requestProductData() {  [weak self]  (success) in
+            NetworkManager.shared.requestProductData() {  [weak self]  (success) in
                 if success {
                      DispatchQueue.main.async {
                         self?.categoryEntityList = self?.fetchCategoryDataFromDatabase() ?? []

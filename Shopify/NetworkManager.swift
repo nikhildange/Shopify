@@ -10,30 +10,38 @@ import Foundation
 
 struct NetworkManager {
     
-    static func requestProductData(completion: @escaping (Bool) -> Void) {
-    guard let url = URL(string: "https://stark-spire-93433.herokuapp.com/json") else {
-        print("NW: Invalid URL")
-        return
-    }
+    static let baseUrl = "https://stark-spire-93433.herokuapp.com/json"
+    static let shared: NetworkManager = {
+        return NetworkManager()
+    }()
     
+    func requestProductData(completion: @escaping (Bool) -> Void) {
+        fetchProductList { (productInfo) in
+            try? CategoryEntity.deleteAll()
+            CategoryEntity.saveAllInventory(productInfo: productInfo)
+            completion(true)
+        }
+    }
+
+    func fetchProductList(completionHandler: @escaping (ProductInfo) -> Void) {
+        guard let url = URL(string: NetworkManager.baseUrl) else {
+               print("NW: Invalid URL")
+               return
+           }
         let task = URLSession.shared.dataTask(with: url, completionHandler:{ data,response,error in
-            guard let data = data else {
-                print("NW: Data nil; Error: \(error?.localizedDescription ?? "nil")")
-                return
-            }
+           guard let data = data else {
+               print("NW: Data nil; Error: \(error?.localizedDescription ?? "nil")")
+               return
+           }
             do {
                 let productInfo = try JSONDecoder().decode(ProductInfo.self, from: data)
-                try? CategoryEntity.deleteAll()
-                CategoryEntity.saveAllInventory(productInfo: productInfo)
-                completion(true)
+                completionHandler(productInfo)
             } catch (let error) {
                 print("NW: Parsing Error: \(error.localizedDescription)")
-                completion(false)
             }
         })
         task.resume()
     }
-
     
 }
 
